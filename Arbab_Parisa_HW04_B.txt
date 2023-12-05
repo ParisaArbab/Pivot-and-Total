@@ -1,0 +1,41 @@
+WITH monthly_order_totals AS (
+  SELECT
+    pc.Name AS Category,
+    ps.Name AS Subcategory,
+    DATE_FORMAT(ph.OrderDate, '%m') AS OrderMonth,
+    SUM(pod.OrderQty) AS OrderQuantity
+  FROM
+    PurchaseOrderDetail pod
+    JOIN PurchaseOrderHeader ph ON pod.PurchaseOrderID = ph.PurchaseOrderID
+    JOIN Product p ON pod.ProductID = p.ProductID
+    JOIN ProductSubcategory ps ON p.ProductSubcategoryID = ps.ProductSubcategoryID
+    JOIN ProductCategory pc ON ps.ProductCategoryID = pc.ProductCategoryID
+  GROUP BY
+    Category,
+    Subcategory,
+    OrderMonth WITH ROLLUP
+)
+SELECT
+  Category,
+  Subcategory,
+  COALESCE(SUM(CASE WHEN OrderMonth = '01' THEN OrderQuantity END), 'Null') AS `January`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '02' THEN OrderQuantity END), 'Null') AS `February`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '03' THEN OrderQuantity END), 'Null') AS `March`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '04' THEN OrderQuantity END), 'Null') AS `April`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '05' THEN OrderQuantity END), 'Null') AS `May`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '06' THEN OrderQuantity END), 'Null') AS `June`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '07' THEN OrderQuantity END), 'Null') AS `July`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '08' THEN OrderQuantity END), 'Null') AS `August`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '09' THEN OrderQuantity END), 'Null') AS `September`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '10' THEN OrderQuantity END), 'Null') AS `October`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '11' THEN OrderQuantity END), 'Null') AS `November`,
+  COALESCE(SUM(CASE WHEN OrderMonth = '12' THEN OrderQuantity END), 'Null') AS `December`
+FROM
+  monthly_order_totals
+WHERE
+  Category IS NOT NULL
+  AND Subcategory IS NOT NULL
+GROUP BY
+  Category,
+  Subcategory
+WITH ROLLUP;
